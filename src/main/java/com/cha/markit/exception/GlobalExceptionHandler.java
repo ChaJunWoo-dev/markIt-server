@@ -2,7 +2,6 @@ package com.cha.markit.exception;
 
 import com.cha.markit.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -17,21 +16,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(InvalidImageException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidImageException(InvalidImageException e) {
-        log.error("Invalid image error: {}", e.getMessage());
-        
-        ErrorCode errorCode = e.getErrorCode();
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(errorCode.getCode())
-                .status(errorCode.getHttpStatus().value())
-                .message(e.getMessage())
-                .build();
-
-        return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
@@ -70,9 +54,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
     }
 
-    /**
-     * 파라미터 타입 불일치 예외 처리
-     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         log.error("Type mismatch: {}", e.getMessage());
@@ -88,10 +69,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
     }
 
-    /**
-     * 파일 크기 초과 예외 처리
-     * HTTP 상태 코드: 413 Payload Too Large
-     */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
         log.error("File size exceeded: {}", e.getMessage());
@@ -107,9 +84,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
     }
 
-    /**
-     * 기타 모든 예외 처리
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         log.error("Unexpected error: {}", e.getMessage(), e);
