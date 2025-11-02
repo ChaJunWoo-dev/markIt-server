@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.awt.image.BufferedImage;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WatermarkConfig {
+public abstract class WatermarkConfig {
 
     @NotBlank(message = "워터마크 위치는 필수입니다")
     @Pattern(regexp = "TOP_LEFT|TOP_CENTER|TOP_RIGHT|CENTER_LEFT|CENTER|CENTER_RIGHT|BOTTOM_LEFT|BOTTOM_CENTER|BOTTOM_RIGHT",
@@ -24,4 +26,6 @@ public class WatermarkConfig {
     @DecimalMin(value = "0.0", message = "투명도는 0 이상이어야 합니다")
     @DecimalMax(value = "1.0", message = "투명도는 1 이하여야 합니다")
     private float opacity;
+
+    public abstract void applyWatermark(BufferedImage image);
 }
