@@ -1,7 +1,7 @@
 package com.cha.markit.controller;
 
-import com.cha.markit.dto.WatermarkProcessResponse;
-import com.cha.markit.dto.WatermarkRequest;
+import com.cha.markit.dto.response.WatermarkProcessResponse;
+import com.cha.markit.dto.request.WatermarkRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

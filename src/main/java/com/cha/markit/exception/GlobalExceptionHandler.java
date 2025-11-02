@@ -1,6 +1,6 @@
 package com.cha.markit.exception;
 
-import com.cha.markit.dto.ErrorResponse;
+import com.cha.markit.dto.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

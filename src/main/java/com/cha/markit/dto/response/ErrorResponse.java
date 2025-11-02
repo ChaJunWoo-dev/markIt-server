@@ -1,4 +1,4 @@
-package com.cha.markit.dto;
+package com.cha.markit.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,12 +12,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WatermarkProcessResponse {
+public class ErrorResponse {
 
+    private String code;
+    private Integer status;
     private String message;
-    private int imageCount;
-    private List<String> imageNames;
-    private WatermarkConfig config;
+    private List<String> details;
 
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();

@@ -1,5 +1,6 @@
-package com.cha.markit.dto;
+package com.cha.markit.dto.request;
 
+import com.cha.markit.dto.config.WatermarkConfig;
 import com.cha.markit.validation.ValidImages;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;

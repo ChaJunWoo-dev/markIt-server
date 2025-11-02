@@ -1,4 +1,4 @@
-package com.cha.markit.dto;
+package com.cha.markit.dto.config;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
