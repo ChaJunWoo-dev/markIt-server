@@ -22,7 +22,7 @@ public class WatermarkController {
     ) {
         log.info("=== 워터마크 처리 요청 시작 ===");
         log.info("받은 이미지 개수: {}", request.getImages().size());
-        log.info("워터마크 설정 - 위치: {}, 크기: {}%, 투명도: {}", 
+        log.info("워터마크 설정 - 위치: {}, 크기: {}%, 투명도: {}",
                 request.getConfig().getPosition(), 
                 request.getConfig().getSize(), 
                 request.getConfig().getOpacity());
@@ -31,7 +31,7 @@ public class WatermarkController {
                 .map(MultipartFile::getOriginalFilename)
                 .collect(Collectors.toList());
 
-        log.info("=== 이미지 수신 및 검증 완료 ===");
+        log.info("=== 이미지 및 워터마크 정보 수신 완료 ===");
 
         WatermarkProcessResponse response = WatermarkProcessResponse.builder()
                 .message("이미지 " + request.getImages().size() + "개 수신 완료")
