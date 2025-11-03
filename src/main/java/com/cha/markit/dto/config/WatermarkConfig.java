@@ -26,6 +26,4 @@ public abstract class WatermarkConfig {
     @DecimalMin(value = "0.0", message = "투명도는 0 이상이어야 합니다")
     @DecimalMax(value = "1.0", message = "투명도는 1 이하여야 합니다")
     private float opacity;
-
-    public abstract void applyWatermark(BufferedImage image);
 }

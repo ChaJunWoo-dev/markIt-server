@@ -4,8 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.awt.image.BufferedImage;
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class TextWatermarkConfig extends WatermarkConfig {
@@ -21,9 +19,4 @@ public class TextWatermarkConfig extends WatermarkConfig {
 
     @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "색상은 HEX 형식이어야 합니다 (예: #FFFFFF)")
     private String color;
-
-    @Override
-    public void applyWatermark(BufferedImage image) {
-        // todo: 워터마크 처리 로직
-    }
 }
