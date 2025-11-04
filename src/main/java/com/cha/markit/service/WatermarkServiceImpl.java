@@ -9,8 +9,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Service
@@ -35,6 +38,7 @@ public class WatermarkServiceImpl implements WatermarkService {
             if (image == null) {
                 throw new IOException("이미지를 읽을 수 없습니다: " + file.getOriginalFilename());
             }
+
             return image;
         }
     }
@@ -62,6 +66,7 @@ public class WatermarkServiceImpl implements WatermarkService {
 
     private Dimension getTextBounds(Graphics2D graphics, String text) {
         FontMetrics metrics = graphics.getFontMetrics();
+
         return new Dimension(metrics.stringWidth(text), metrics.getHeight());
     }
 
@@ -115,7 +120,18 @@ public class WatermarkServiceImpl implements WatermarkService {
     }
 
     @Override
-    public byte[] createZip(List<BufferedImage> processedImages, List<String> filenames) throws IOException {
-        return new byte[0];
+    public byte[] zipImages(List<byte[]> images, List<String> fileNames) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            for (int i = 0; i < images.size(); i++) {
+                ZipEntry entry = new ZipEntry(fileNames.get(i));
+                zos.putNextEntry(entry);
+                zos.write(images.get(i));
+                zos.closeEntry();
+            }
+        }
+
+        return baos.toByteArray();
     }
 }
