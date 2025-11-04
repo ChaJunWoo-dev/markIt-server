@@ -11,5 +11,5 @@ public interface WatermarkService {
 
     BufferedImage applyWatermark(MultipartFile image, WatermarkConfig config) throws IOException;
 
-    byte[] createZip(List<BufferedImage> processedImages, List<String> filenames) throws IOException;
+    byte[] zipImages(List<byte[]> watermarked, List<String> fileNames) throws IOException;
 }
