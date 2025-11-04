@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class WatermarkProcessResponse {
 
+    private String sessionId;
     private String message;
     private int imageCount;
     private List<String> imageNames;
