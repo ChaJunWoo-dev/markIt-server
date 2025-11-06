@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import java.awt.image.BufferedImage;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public abstract class WatermarkConfig {
