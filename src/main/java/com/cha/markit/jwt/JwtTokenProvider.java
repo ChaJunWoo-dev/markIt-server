@@ -1,4 +1,4 @@
-package com.cha.markit.util;
+package com.cha.markit.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -35,7 +35,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String getUserIdFromToken(String token) {
+    public String getUserId(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()

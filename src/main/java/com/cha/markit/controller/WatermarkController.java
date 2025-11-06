@@ -1,13 +1,17 @@
 package com.cha.markit.controller;
 
 import com.cha.markit.dto.request.WatermarkRequest;
+import com.cha.markit.dto.response.WatermarkProcessResponse;
+import com.cha.markit.repository.WatermarkRepository;
 import com.cha.markit.service.WatermarkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +29,7 @@ import java.util.zip.ZipOutputStream;
 public class WatermarkController {
 
     private final WatermarkService watermarkService;
+    private final WatermarkRepository watermarkRepository;
 
     @PostMapping("/preview")
     public ResponseEntity<byte[]> previewWatermark(
@@ -66,7 +71,22 @@ public class WatermarkController {
                 .body(baos.toByteArray());
     }
 
-    // TODO: 로그인 사용자용 저장 API 추가 예정
-    // @PostMapping("")
-    // public ResponseEntity<?> createWatermark(...) { ... }
+    @PostMapping("/save")
+    public ResponseEntity<WatermarkProcessResponse> createWatermark(
+            Authentication auth,
+            @Valid @ModelAttribute WatermarkRequest request
+    ) throws IOException {
+        String userId = auth.getName();
+        log.info("=== 워터마크 생성 요청 (로그인) - userId: {} ===", userId);
+        log.info("받은 이미지 개수: {}", request.getImages().size());
+
+        byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request.getConfig());
+        WatermarkProcessResponse response = watermarkService.saveWatermark(userId, zipData, request.getImages().size());
+
+        log.info("=== 워터마크 생성 완료 - watermarkId: {} ===", response.getId());
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
 }

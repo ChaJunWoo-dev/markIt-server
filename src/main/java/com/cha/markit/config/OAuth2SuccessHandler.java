@@ -2,7 +2,7 @@ package com.cha.markit.config;
 
 import com.cha.markit.domain.User;
 import com.cha.markit.repository.UserRepository;
-import com.cha.markit.util.JwtTokenProvider;
+import com.cha.markit.jwt.JwtTokenProvider;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
