@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class WatermarkProcessResponse {
 
     private String id;
-    private String downloadUrl;
     private int imageCount;
     private LocalDateTime createdAt;
 }
