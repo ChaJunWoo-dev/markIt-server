@@ -23,7 +23,10 @@ public class Watermark {
     private String userId;
 
     @Column(nullable = false)
-    private String filePath;
+    private String key;
+
+    @Column(nullable = false)
+    private String eTag;
 
     @Column(nullable = false)
     private int imageCount;
