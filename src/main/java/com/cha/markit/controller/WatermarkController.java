@@ -1,7 +1,7 @@
 package com.cha.markit.controller;
 
 import com.cha.markit.dto.request.WatermarkRequest;
-import com.cha.markit.dto.response.WatermarkProcessResponse;
+import com.cha.markit.dto.response.WatermarkResponse;
 import com.cha.markit.repository.WatermarkRepository;
 import com.cha.markit.service.WatermarkService;
 import jakarta.validation.Valid;
@@ -72,7 +72,7 @@ public class WatermarkController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<WatermarkProcessResponse> createWatermark(
+    public ResponseEntity<WatermarkResponse> createWatermark(
             Authentication auth,
             @Valid @ModelAttribute WatermarkRequest request
     ) throws IOException {
@@ -81,7 +81,7 @@ public class WatermarkController {
         log.info("받은 이미지 개수: {}", request.getImages().size());
 
         byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request.getConfig());
-        WatermarkProcessResponse response = watermarkService.saveWatermark(userId, zipData, request.getImages().size());
+        WatermarkResponse response = watermarkService.saveWatermark(userId, zipData, request.getImages().size());
 
         log.info("=== 워터마크 생성 완료 - watermarkId: {} ===", response.getId());
 

@@ -1,7 +1,7 @@
 package com.cha.markit.service;
 
 import com.cha.markit.dto.config.WatermarkConfig;
-import com.cha.markit.dto.response.WatermarkProcessResponse;
+import com.cha.markit.dto.response.WatermarkResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
@@ -14,5 +14,5 @@ public interface WatermarkService {
 
     byte[] createWatermarkZip(List<MultipartFile> images, WatermarkConfig config) throws IOException;
 
-    WatermarkProcessResponse saveWatermark(String userId, byte[] zipData, int imageCount) throws IOException;
+    WatermarkResponse saveWatermark(String userId, byte[] zipData, int imageCount) throws IOException;
 }

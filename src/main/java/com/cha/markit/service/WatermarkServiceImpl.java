@@ -4,8 +4,9 @@ import com.cha.markit.domain.Watermark;
 import com.cha.markit.dto.config.ImageWatermarkConfig;
 import com.cha.markit.dto.config.TextWatermarkConfig;
 import com.cha.markit.dto.config.WatermarkConfig;
-import com.cha.markit.dto.response.WatermarkProcessResponse;
+import com.cha.markit.dto.response.WatermarkResponse;
 import com.cha.markit.repository.WatermarkRepository;
+import com.cha.markit.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,10 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -30,7 +30,7 @@ import java.util.zip.ZipOutputStream;
 public class WatermarkServiceImpl implements WatermarkService {
 
     private final WatermarkRepository watermarkRepository;
-    private static final String UPLOAD_DIR = "uploads/watermarks";
+    private final S3Service s3Service;
 
     @Override
     public byte[] createWatermarkZip(List<MultipartFile> images, WatermarkConfig config) throws IOException {
@@ -61,36 +61,45 @@ public class WatermarkServiceImpl implements WatermarkService {
     }
 
     @Override
-    public WatermarkProcessResponse saveWatermark(String userId, byte[] zipData, int imageCount) throws IOException {
+    public WatermarkResponse saveWatermark(String userId, byte[] zipData, int imageCount) throws IOException {
         log.info("워터마크 저장 시작 - userId: {}", userId);
 
-        String watermarkId = UUID.randomUUID().toString();
-        Path uploadPath = Paths.get(UPLOAD_DIR);
-        Files.createDirectories(uploadPath);
+        String key = UUID.randomUUID() + ".zip";
 
-        String fileName = watermarkId + ".zip";
-        Path filePath = uploadPath.resolve(fileName);
-        Files.write(filePath, zipData);
+        String eTag = uploadS3Watermark(zipData, key);
+        Watermark watermark = saveWatermarkMetadata(userId, imageCount, key, eTag);
 
-        log.info("ZIP 파일 저장 완료: {}", filePath);
+        return WatermarkResponse.builder()
+                .id(key)
+                .imageCount(imageCount)
+                .createdAt(watermark.getCreatedAt())
+                .build();
+    }
 
+    private String uploadS3Watermark(byte[] zipData, String key) throws IOException {
+        CompletableFuture<String> eTagFuture = s3Service.uploadBytesAsync(key, zipData);
+
+        try {
+            return eTagFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException("S3 업로드 중 오류 발생", e);
+        }
+    }
+
+    private Watermark saveWatermarkMetadata(String userId, int imageCount, String key, String eTag) {
         Watermark watermark = Watermark.builder()
-                .id(watermarkId)
+                .id(key)
                 .userId(userId)
-                .filePath(filePath.toString())
+                .key(key)
+                .eTag(eTag)
                 .imageCount(imageCount)
                 .build();
 
         watermarkRepository.save(watermark);
 
-        log.info("워터마크 메타데이터 저장 완료 - watermarkId: {}", watermarkId);
+        log.info("워터마크 메타데이터 저장 완료 - key: {}", key);
 
-        return WatermarkProcessResponse.builder()
-                .id(watermarkId)
-                .downloadUrl("/api/watermark/download/" + watermarkId)
-                .imageCount(imageCount)
-                .createdAt(watermark.getCreatedAt())
-                .build();
+        return watermark;
     }
 
     @Override
