@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WatermarkProcessResponse {
+public class WatermarkResponse {
 
     private String id;
     private int imageCount;
