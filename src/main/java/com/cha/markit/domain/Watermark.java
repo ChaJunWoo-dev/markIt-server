@@ -17,13 +17,10 @@ import java.time.LocalDateTime;
 public class Watermark {
 
     @Id
-    private String id;
+    private String key;
 
     @Column(nullable = false)
     private String userId;
-
-    @Column(nullable = false)
-    private String key;
 
     @Column(nullable = false)
     private String eTag;
