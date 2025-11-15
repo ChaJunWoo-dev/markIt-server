@@ -1,6 +1,7 @@
 package com.cha.markit.controller;
 
 import com.cha.markit.dto.request.WatermarkRequest;
+import com.cha.markit.dto.response.WatermarkListResponse;
 import com.cha.markit.dto.response.WatermarkResponse;
 import com.cha.markit.repository.WatermarkRepository;
 import com.cha.markit.service.WatermarkService;
@@ -19,6 +20,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -88,5 +90,13 @@ public class WatermarkController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<WatermarkListResponse>> getWatermarkList(Authentication auth) {
+        String userId = auth.getName();
+        List<WatermarkListResponse> watermarks = watermarkService.getWatermarkList(userId);
+
+        return ResponseEntity.ok(watermarks);
     }
 }

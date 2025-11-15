@@ -28,7 +28,8 @@ public class SecurityConfig {
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/watermark/**").authenticated()
+                        .requestMatchers("/api/watermark/preview").permitAll()
+                        .requestMatchers("/api/watermark/**", "/api/watermarks/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, OAuth2LoginAuthenticationFilter.class)

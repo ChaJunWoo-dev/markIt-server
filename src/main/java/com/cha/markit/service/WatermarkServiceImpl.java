@@ -1,6 +1,7 @@
 package com.cha.markit.service;
 
 import com.cha.markit.dto.config.WatermarkConfig;
+import com.cha.markit.dto.response.WatermarkListResponse;
 import com.cha.markit.dto.response.WatermarkResponse;
 import com.cha.markit.repository.WatermarkRepository;
 import com.cha.markit.s3.S3Service;
@@ -44,5 +45,16 @@ public class WatermarkServiceImpl implements WatermarkService {
                 .orElseThrow(() -> new IllegalArgumentException("워터마크를 찾을 수 없습니다"));
 
         return s3Service.generatePresignedUrl(watermarkKey, expiration);
+    }
+
+    @Override
+    public List<WatermarkListResponse> getWatermarkList(String userId) {
+        return watermarkRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(watermark -> WatermarkListResponse.builder()
+                        .key(watermark.getKey())
+                        .imageCount(watermark.getImageCount())
+                        .createdAt(watermark.getCreatedAt())
+                        .build())
+                .toList();
     }
 }

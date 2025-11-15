@@ -1,6 +1,7 @@
 package com.cha.markit.service;
 
 import com.cha.markit.dto.config.WatermarkConfig;
+import com.cha.markit.dto.response.WatermarkListResponse;
 import com.cha.markit.dto.response.WatermarkResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,4 +19,6 @@ public interface WatermarkService {
     WatermarkResponse saveWatermark(String userId, byte[] zipData, int imageCount) throws IOException;
 
     String getDownloadUrl(String watermarkKey, Duration expiration);
+
+    List<WatermarkListResponse> getWatermarkList(String userId);
 }
