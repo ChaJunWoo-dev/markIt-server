@@ -9,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -36,5 +36,13 @@ public class WatermarkServiceImpl implements WatermarkService {
     @Override
     public BufferedImage applyWatermark(MultipartFile image, WatermarkConfig config) throws IOException {
         return watermarkProcessor.applyWatermark(image, config);
+    }
+
+    @Override
+    public String getDownloadUrl(String watermarkKey, Duration expiration) {
+        watermarkRepository.findById(watermarkKey)
+                .orElseThrow(() -> new IllegalArgumentException("워터마크를 찾을 수 없습니다"));
+
+        return s3Service.generatePresignedUrl(watermarkKey, expiration);
     }
 }
