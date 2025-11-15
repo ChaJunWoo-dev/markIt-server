@@ -12,7 +12,7 @@ import java.io.IOException;
 @Component
 public class WatermarkGraphicsHelper {
 
-    private BufferedImage readImage(MultipartFile file) throws IOException {
+    public BufferedImage readImage(MultipartFile file) throws IOException {
         try (var inputStream = file.getInputStream()) {
             BufferedImage image = javax.imageio.ImageIO.read(inputStream);
 
@@ -24,7 +24,7 @@ public class WatermarkGraphicsHelper {
         }
     }
 
-    private void applyTextWatermark(BufferedImage image, TextWatermarkConfig config) {
+    public void applyTextWatermark(BufferedImage image, TextWatermarkConfig config) {
         Graphics2D graphics = image.createGraphics();
 
         graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, config.getOpacity()));
@@ -37,7 +37,7 @@ public class WatermarkGraphicsHelper {
         graphics.dispose();
     }
 
-    private void applyImageWatermark(BufferedImage image, ImageWatermarkConfig config) throws IOException {
+    public void applyImageWatermark(BufferedImage image, ImageWatermarkConfig config) throws IOException {
         BufferedImage watermarkImage = readImage(config.getImage());
         BufferedImage scaledWatermark = scaleImage(watermarkImage, config.getWidth());
 
@@ -52,7 +52,7 @@ public class WatermarkGraphicsHelper {
         graphics.dispose();
     }
 
-    private BufferedImage scaleImage(BufferedImage original, int targetWidth) {
+    public BufferedImage scaleImage(BufferedImage original, int targetWidth) {
         //비율 유지
         int targetHeight = (int) (original.getHeight() * ((double) targetWidth / original.getWidth()));
         BufferedImage scaled = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
@@ -66,7 +66,7 @@ public class WatermarkGraphicsHelper {
         return scaled;
     }
 
-    private Point calculatePosition(BufferedImage image, String position, Dimension watermarkSize) {
+    public Point calculatePosition(BufferedImage image, String position, Dimension watermarkSize) {
         int imageWidth = image.getWidth();
         int imageHeight = image.getHeight();
         int wmWidth = watermarkSize.width;
@@ -86,7 +86,7 @@ public class WatermarkGraphicsHelper {
         };
     }
 
-    private Color hexToColor(String hex) {
+    public Color hexToColor(String hex) {
         return new Color(
                 Integer.valueOf(hex.substring(1, 3), 16),
                 Integer.valueOf(hex.substring(3, 5), 16),
@@ -94,7 +94,7 @@ public class WatermarkGraphicsHelper {
         );
     }
 
-    private Dimension getTextBounds(Graphics2D graphics, String text) {
+    public Dimension getTextBounds(Graphics2D graphics, String text) {
         FontMetrics metrics = graphics.getFontMetrics();
 
         return new Dimension(metrics.stringWidth(text), metrics.getHeight());
