@@ -1,5 +1,6 @@
 package com.cha.markit.dto.config;
 
+import com.cha.markit.validation.ValidWatermarkImage;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImageWatermarkConfig extends WatermarkConfig {
 
     @NotNull(message = "워터마크 이미지는 필수입니다")
+    @ValidWatermarkImage
     private MultipartFile image;
 
     @NotNull(message = "워터마크 너비는 필수입니다")
