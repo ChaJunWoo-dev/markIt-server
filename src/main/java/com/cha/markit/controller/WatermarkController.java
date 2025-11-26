@@ -1,9 +1,11 @@
 package com.cha.markit.controller;
 
-import com.cha.markit.dto.request.WatermarkRequest;
+import com.cha.markit.dto.request.ImageWatermarkRequest;
+import com.cha.markit.dto.request.TextWatermarkRequest;
+import com.cha.markit.dto.response.DownloadUrlResponse;
 import com.cha.markit.dto.response.WatermarkListResponse;
 import com.cha.markit.dto.response.WatermarkResponse;
-import com.cha.markit.repository.WatermarkRepository;
+import com.cha.markit.service.WatermarkProcessor;
 import com.cha.markit.service.WatermarkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,80 +14,84 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/watermark")
+@RequestMapping("/api/watermarks")
 @RequiredArgsConstructor
 public class WatermarkController {
 
     private final WatermarkService watermarkService;
-    private final WatermarkRepository watermarkRepository;
+    private final WatermarkProcessor watermarkProcessor;
 
-    @PostMapping("/preview")
-    public ResponseEntity<byte[]> previewWatermark(
-            @Valid @ModelAttribute WatermarkRequest request
+    @PostMapping("/preview/text")
+    public ResponseEntity<byte[]> previewTextWatermark(
+            @Valid @ModelAttribute TextWatermarkRequest request
     ) throws IOException {
-        log.info("=== 워터마크 미리보기 요청 시작 (비로그인) ===");
-        log.info("받은 이미지 개수: {}", request.getImages().size());
-        log.info("워터마크 설정 - 위치: {}, 크기: {}%, 투명도: {}",
-                request.getConfig().getPosition(), 
-                request.getConfig().getSize(), 
-                request.getConfig().getOpacity());
+        log.info("=== 텍스트 워터마크 미리보기 요청 시작 (비로그인) ===");
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ZipOutputStream zos = new ZipOutputStream(baos);
+        byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request);
 
-        for (MultipartFile imageFile : request.getImages()) {
-            BufferedImage watermarked = watermarkService.applyWatermark(imageFile, request.getConfig());
-            
-            ByteArrayOutputStream imageOut = new ByteArrayOutputStream();
-            ImageIO.write(watermarked, "png", imageOut);
-            
-            String filename = imageFile.getOriginalFilename();
-            if (filename == null || filename.isEmpty()) {
-                filename = "watermarked.png";
-            }
-            
-            zos.putNextEntry(new ZipEntry(filename));
-            zos.write(imageOut.toByteArray());
-            zos.closeEntry();
-        }
-
-        zos.close();
-
-        log.info("=== 워터마크 미리보기 완료: {}개 이미지 ZIP 생성 ===", request.getImages().size());
+        log.info("=== 텍스트 워터마크 미리보기 완료: {}개 이미지 ZIP 생성 ===", request.getImages().size());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"watermarks.zip\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(baos.toByteArray());
+                .body(zipData);
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<WatermarkResponse> createWatermark(
-            Authentication auth,
-            @Valid @ModelAttribute WatermarkRequest request
+    @PostMapping("/preview/image")
+    public ResponseEntity<byte[]> previewImageWatermark(
+            @Valid @ModelAttribute ImageWatermarkRequest request
     ) throws IOException {
-        String userId = auth.getName();
-        log.info("=== 워터마크 생성 요청 (로그인) - userId: {} ===", userId);
-        log.info("받은 이미지 개수: {}", request.getImages().size());
+        log.info("=== 이미지 워터마크 미리보기 요청 시작 (비로그인) ===");
 
-        byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request.getConfig());
-        WatermarkResponse response = watermarkService.saveWatermark(userId, zipData, request.getImages().size());
+        byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request);
 
-        log.info("=== 워터마크 생성 완료 - watermarkId: {} ===", response.getId());
+        log.info("=== 이미지 워터마크 미리보기 완료: {}개 이미지 ZIP 생성 ===", request.getImages().size());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"watermarks.zip\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(zipData);
+    }
+
+    @PostMapping("/text")
+    public ResponseEntity<WatermarkResponse> createTextWatermark(
+            @AuthenticationPrincipal String userId,
+            @Valid @ModelAttribute TextWatermarkRequest request
+    ) throws IOException {
+        log.info("=== 텍스트 워터마크 생성 요청 (로그인) - userId: {} ===", userId);
+
+        byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request);
+        byte[] thumbnailData = createThumbnail(request);
+        WatermarkResponse response = watermarkService.saveWatermark(userId, zipData, thumbnailData, request.getImages().size());
+
+        log.info("=== 텍스트 워터마크 생성 완료 - watermarkId: {} ===", response.getKey());
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+
+    @PostMapping("/image")
+    public ResponseEntity<WatermarkResponse> createImageWatermark(
+            @AuthenticationPrincipal String userId,
+            @Valid @ModelAttribute ImageWatermarkRequest request
+    ) throws IOException {
+        log.info("=== 이미지 워터마크 생성 요청 (로그인) - userId: {} ===", userId);
+
+        byte[] zipData = watermarkService.createWatermarkZip(request.getImages(), request);
+        byte[] thumbnailData = createThumbnail(request);
+        WatermarkResponse response = watermarkService.saveWatermark(userId, zipData, thumbnailData, request.getImages().size());
+
+        log.info("=== 이미지 워터마크 생성 완료 - watermarkId: {} ===", response.getKey());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -93,10 +99,44 @@ public class WatermarkController {
     }
 
     @GetMapping
-    public ResponseEntity<List<WatermarkListResponse>> getWatermarkList(Authentication auth) {
-        String userId = auth.getName();
+    public ResponseEntity<List<WatermarkListResponse>> getWatermarkList(@AuthenticationPrincipal String userId) {
         List<WatermarkListResponse> watermarks = watermarkService.getWatermarkList(userId);
 
         return ResponseEntity.ok(watermarks);
     }
+
+    @GetMapping("/{watermarkKey}/download")
+    public ResponseEntity<DownloadUrlResponse> getDownloadUrl(@PathVariable String watermarkKey) {
+        Duration expiration = Duration.ofMinutes(30);
+        String downloadUrl = watermarkService.getDownloadUrl(watermarkKey, expiration);
+
+        DownloadUrlResponse response = DownloadUrlResponse.builder()
+                .downloadUrl(downloadUrl)
+                .expiresInSeconds(expiration.getSeconds())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{key}")
+    public ResponseEntity<Void> deleteWatermark(
+            @PathVariable("key") String watermarkKey,
+            @AuthenticationPrincipal String userId
+    ) {
+        log.info("=== 워터마크 삭제 요청 - key: {}, userId: {} ===", watermarkKey, userId);
+
+        watermarkService.deleteWatermark(watermarkKey, userId);
+
+        log.info("=== 워터마크 삭제 완료 - key: {} ===", watermarkKey);
+        return ResponseEntity.noContent().build();
+    }
+
+    private byte[] createThumbnail(TextWatermarkRequest request) throws IOException {
+        return watermarkProcessor.createThumbnail(request.getImages(), request);
+    }
+
+    private byte[] createThumbnail(ImageWatermarkRequest request) throws IOException {
+        return watermarkProcessor.createThumbnail(request.getImages(), request);
+    }
 }
+
