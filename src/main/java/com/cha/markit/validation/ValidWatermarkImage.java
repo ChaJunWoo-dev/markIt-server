@@ -1,6 +1,7 @@
 package com.cha.markit.validation;
 
 import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
@@ -9,4 +10,6 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = WatermarkImageValidator.class)
 public @interface ValidWatermarkImage {
     String message() default "유효하지 않은 워터마크 이미지입니다";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
 }

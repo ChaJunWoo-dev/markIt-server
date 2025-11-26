@@ -10,4 +10,6 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = ImageValidator.class)
 public @interface ValidImages {
     String message() default "유효하지 않은 이미지입니다";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
 }
