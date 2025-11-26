@@ -1,29 +1,26 @@
 package com.cha.markit.controller;
 
-import com.cha.markit.dto.response.UserResponse;
-import org.springframework.http.HttpStatus;
+import com.cha.markit.dto.response.AuthResponse;
+import com.cha.markit.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @GetMapping("/user")
-    public ResponseEntity<UserResponse> getUser(@AuthenticationPrincipal OAuth2User principal) {
-        
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    private final AuthService authService;
 
-        String email = principal.getAttribute("email");
-        String name = principal.getAttribute("name");
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> loginWithGoogle(@RequestBody Map<String, String> body) {
+        String idToken = body.get("idToken");
+        AuthResponse response = authService.authenticateWithGoogle(idToken);
 
-        return ResponseEntity.ok(new UserResponse(email, name));
+        return ResponseEntity.ok(response);
     }
 }
 
