@@ -12,8 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WatermarkResponse {
-
-    private String id;
+    private String key;
     private int imageCount;
     private LocalDateTime createdAt;
 }

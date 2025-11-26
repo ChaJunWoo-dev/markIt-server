@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class Watermark {
 
     @Id
+    @Column(name = "s3_key")
     private String key;
 
     @Column(nullable = false)
@@ -29,12 +30,14 @@ public class Watermark {
     private int imageCount;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
+    public String getZipKey() {
+        return key + ".zip";
+    }
+
+    public String getThumbnailKey() {
+        return key + "_thumb.jpg";
     }
 }
