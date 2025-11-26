@@ -1,7 +1,9 @@
 package com.cha.markit.service;
 
-import com.cha.markit.dto.config.ImageWatermarkConfig;
-import com.cha.markit.dto.config.TextWatermarkConfig;
+import com.cha.markit.dto.request.ImageWatermarkRequest;
+import com.cha.markit.dto.request.TextWatermarkRequest;
+import com.cha.markit.exception.BusinessException;
+import com.cha.markit.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,34 +19,40 @@ public class WatermarkGraphicsHelper {
             BufferedImage image = javax.imageio.ImageIO.read(inputStream);
 
             if (image == null) {
-                throw new IOException("이미지를 읽을 수 없습니다: " + file.getOriginalFilename());
+                throw new BusinessException(ErrorCode.IMAGE_READ_FAILED);
             }
 
             return image;
         }
     }
 
-    public void applyTextWatermark(BufferedImage image, TextWatermarkConfig config) {
+    public void applyTextWatermark(BufferedImage image, TextWatermarkRequest request) {
         Graphics2D graphics = image.createGraphics();
 
-        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, config.getOpacity()));
-        graphics.setFont(new Font("Arial", Font.BOLD, config.getFontSize()));
-        graphics.setColor(hexToColor(config.getColor()));
+        int fontSize = (int) (image.getHeight() * request.getSize() / 100.0);
 
-        Point position = calculatePosition(image, config.getPosition(), getTextBounds(graphics, config.getText()));
-        graphics.drawString(config.getText(), position.x, position.y);
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, request.getOpacity()));
+        graphics.setFont(new Font("Arial", Font.BOLD, fontSize));
+        graphics.setColor(hexToColor(request.getColor()));
+
+        FontMetrics metrics = graphics.getFontMetrics();
+        Dimension textBounds = getTextBounds(graphics, request.getText());
+        Point position = calculateTextPosition(image, request.getPosition(), textBounds, metrics);
+        graphics.drawString(request.getText(), position.x, position.y);
 
         graphics.dispose();
     }
 
-    public void applyImageWatermark(BufferedImage image, ImageWatermarkConfig config) throws IOException {
-        BufferedImage watermarkImage = readImage(config.getImage());
-        BufferedImage scaledWatermark = scaleImage(watermarkImage, config.getWidth());
+    public void applyImageWatermark(BufferedImage image, ImageWatermarkRequest request) throws IOException {
+        BufferedImage watermarkImage = readImage(request.getWatermarkImage());
+
+        int width = (int) (image.getWidth() * request.getSize() / 100.0);
+        BufferedImage scaledWatermark = scaleImage(watermarkImage, width);
 
         Graphics2D graphics = image.createGraphics();
-        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, config.getOpacity()));
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, request.getOpacity()));
 
-        Point position = calculatePosition(image, config.getPosition(), new Dimension(
+        Point position = calculateImagePosition(image, request.getPosition(), new Dimension(
                 scaledWatermark.getWidth(), scaledWatermark.getHeight()
         ));
         graphics.drawImage(scaledWatermark, position.x, position.y, null);
@@ -66,22 +74,43 @@ public class WatermarkGraphicsHelper {
         return scaled;
     }
 
-    public Point calculatePosition(BufferedImage image, String position, Dimension watermarkSize) {
+    public Point calculateTextPosition(BufferedImage image, String position, Dimension textBounds, FontMetrics metrics) {
+        int imageWidth = image.getWidth();
+        int imageHeight = image.getHeight();
+        int textWidth = textBounds.width;
+        int textHeight = metrics.getHeight();
+        int ascent = metrics.getAscent();
+
+        return switch (position) {
+            case "TOP_LEFT" -> new Point(0, ascent);
+            case "TOP_CENTER" -> new Point((imageWidth - textWidth) / 2, ascent);
+            case "TOP_RIGHT" -> new Point(imageWidth - textWidth, ascent);
+            case "CENTER_LEFT" -> new Point(0, (imageHeight + ascent) / 2);
+            case "CENTER" -> new Point((imageWidth - textWidth) / 2, (imageHeight + ascent) / 2);
+            case "CENTER_RIGHT" -> new Point(imageWidth - textWidth, (imageHeight + ascent) / 2);
+            case "BOTTOM_LEFT" -> new Point(0, imageHeight - textHeight + ascent);
+            case "BOTTOM_CENTER" -> new Point((imageWidth - textWidth) / 2, imageHeight - textHeight + ascent);
+            case "BOTTOM_RIGHT" -> new Point(imageWidth - textWidth, imageHeight - textHeight + ascent);
+            default -> new Point(0, ascent);
+        };
+    }
+
+    public Point calculateImagePosition(BufferedImage image, String position, Dimension watermarkSize) {
         int imageWidth = image.getWidth();
         int imageHeight = image.getHeight();
         int wmWidth = watermarkSize.width;
         int wmHeight = watermarkSize.height;
 
         return switch (position) {
-            case "TOP_LEFT" -> new Point(0, wmHeight);
-            case "TOP_CENTER" -> new Point((imageWidth - wmWidth) / 2, wmHeight);
-            case "TOP_RIGHT" -> new Point(imageWidth - wmWidth, wmHeight);
-            case "CENTER_LEFT" -> new Point(0, (imageHeight + wmHeight) / 2);
-            case "CENTER" -> new Point((imageWidth - wmWidth) / 2, (imageHeight + wmHeight) / 2);
-            case "CENTER_RIGHT" -> new Point(imageWidth - wmWidth, (imageHeight + wmHeight) / 2);
-            case "BOTTOM_LEFT" -> new Point(0, imageHeight);
-            case "BOTTOM_CENTER" -> new Point((imageWidth - wmWidth) / 2, imageHeight);
-            case "BOTTOM_RIGHT" -> new Point(imageWidth - wmWidth, imageHeight);
+            case "TOP_LEFT" -> new Point(0, 0);
+            case "TOP_CENTER" -> new Point((imageWidth - wmWidth) / 2, 0);
+            case "TOP_RIGHT" -> new Point(imageWidth - wmWidth, 0);
+            case "CENTER_LEFT" -> new Point(0, (imageHeight - wmHeight) / 2);
+            case "CENTER" -> new Point((imageWidth - wmWidth) / 2, (imageHeight - wmHeight) / 2);
+            case "CENTER_RIGHT" -> new Point(imageWidth - wmWidth, (imageHeight - wmHeight) / 2);
+            case "BOTTOM_LEFT" -> new Point(0, imageHeight - wmHeight);
+            case "BOTTOM_CENTER" -> new Point((imageWidth - wmWidth) / 2, imageHeight - wmHeight);
+            case "BOTTOM_RIGHT" -> new Point(imageWidth - wmWidth, imageHeight - wmHeight);
             default -> new Point(0, 0);
         };
     }

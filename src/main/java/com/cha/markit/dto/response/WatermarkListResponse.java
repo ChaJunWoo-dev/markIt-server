@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class WatermarkListResponse {
     private String key;
+    private String thumbnailUrl;
     private int imageCount;
     private LocalDateTime createdAt;
 }
